@@ -1,26 +1,31 @@
-@echo off
-:: Check if the script is running as administrator
-net session >nul 2>&1
-if %errorLevel% neq 0 (
-    echo This script requires administrative privileges. Please run as administrator.
-    echo.
-    echo Attempting to relaunch with administrative privileges...
-    powershell -Command "Start-Process cmd -ArgumentList '/c \"%~f0\"' -Verb RunAs"
-    exit /b
+# Chặn kết nối vào và ra với từ khóa "ultraviewer"
+$rules = @(
+    "Block Ultraviewer Outbound",
+    "Block Ultraviewer Inbound"
 )
 
-echo Blocking connections to Ultraviewer...
+# Thêm quy tắc chặn vào Windows Firewall
+foreach ($rule in $rules) {
+    if ($rule -like "*Outbound*") {
+        New-NetFirewallRule -DisplayName $rule -Direction Outbound -Action Block -RemoteAddress "ultraviewer.net"
+        New-NetFirewallRule -DisplayName $rule -Direction Outbound -Action Block -RemoteAddress "www.ultraviewer.net"
+    } else {
+        New-NetFirewallRule -DisplayName $rule -Direction Inbound -Action Block -RemoteAddress "ultraviewer.net"
+        New-NetFirewallRule -DisplayName $rule -Direction Inbound -Action Block -RemoteAddress "www.ultraviewer.net"
+    }
+}
 
-:: Add rules to Windows Firewall to block all outbound and inbound connections to Ultraviewer
-netsh advfirewall firewall add rule name="Block Ultraviewer Outbound" dir=OUT action=BLOCK program="C:\Path\To\Ultraviewer.exe"
-netsh advfirewall firewall add rule name="Block Ultraviewer Inbound" dir=IN action=BLOCK program="C:\Path\To\Ultraviewer.exe"
+# Chỉnh sửa tệp hosts
+$hostsPath = "C:\Windows\System32\drivers\etc\hosts"
+$entries = @(
+    "127.0.0.1 ultraviewer.net",
+    "127.0.0.1 www.ultraviewer.net"
+)
 
-:: Edit the hosts file
-set hostsPath=C:\Windows\System32\drivers\etc\hosts
+foreach ($entry in $entries) {
+    if (-not (Select-String -Path $hostsPath -Pattern $entry)) {
+        Add-Content -Path $hostsPath -Value $entry
+    }
+}
 
-:: Add entries to the hosts file
-echo 127.0.0.1 ultraviewer.net >> %hostsPath%
-echo 127.0.0.1 www.ultraviewer.net >> %hostsPath%
-
-echo Blocking connections to Ultraviewer is complete.
-pause
+Write-Host "Chặn kết nối vào và ra với từ khóa 'ultraviewer' đã hoàn tất."
