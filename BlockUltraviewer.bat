@@ -12,8 +12,8 @@ if %errorLevel% neq 0 (
 echo Blocking connections to Ultraviewer...
 
 :: Add rules to Windows Firewall to block all outbound and inbound connections to Ultraviewer
-netsh advfirewall firewall add rule name="Block Ultraviewer Outbound" dir=OUT action=BLOCK program="C:\Path\To\Ultraviewer.exe"
-netsh advfirewall firewall add rule name="Block Ultraviewer Inbound" dir=IN action=BLOCK program="C:\Path\To\Ultraviewer.exe"
+netsh advfirewall firewall add rule name="Block Ultraviewer Outbound" dir=OUT action=BLOCK program="*ultraviewer.exe"
+netsh advfirewall firewall add rule name="Block Ultraviewer Inbound" dir=IN action=BLOCK program="*ultraviewer.exe"
 
 :: Edit the hosts file
 set hostsPath=C:\Windows\System32\drivers\etc\hosts
